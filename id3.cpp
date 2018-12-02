@@ -155,7 +155,6 @@ struct node{
 			++i;
 		}
 		cout<<gain<<endl;
-		//cout<<"KORCAN"<<endl;
 		return vector<double>{cutoff,att_cutoff};
 	}
 
@@ -186,12 +185,11 @@ struct node{
 		this->decision.push_back(s_rtemp);
 		right = new node(greater,this->unique_types, this->decision);
 		this->decision.pop_back();
-//		cout<<"SIZE OF SMALLER "<<smaller.size()<<" SIZE GREATER "<<greater.size()<<endl;
 	}
 
 	void node_print(){
 		if(left == nullptr && right == nullptr){
-			int i = 0;
+			int i = 1;
 			while(i < decision.size()){
 				cout<<decision[i]<<endl;
 				++i;
