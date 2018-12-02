@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <math.h>
+
 using namespace std;
 
 int count_att(string str){
@@ -43,22 +44,25 @@ void extract(vector<obj> &arr_obj, string &str, unsigned int &count_comma){
 	vector<double> temp_a;
 
 	int i = 0;
-	for(int j = 0;j < count_comma;++j){
+	int j = 0;
+	while(j < count_comma){
 		string temp;
-		while(str [i]!= ','){
+		while(str[i]!= ','){
 			temp.push_back(str[i]);
 			++i;
 		}
-		temp_a.push_back(stod(temp));
-		++i;
+		if(str[i] == ','){
+			temp_a.push_back(stod(temp));
+			++i;
+		}
+		++j;
 	}
-	temp_s = str.substr(i, (str.size()-i+1));
-
+	temp_s = str.substr(i);
 	arr_obj.push_back(obj(temp_a, temp_s));
 
 }
 
-vector<string> find_types(vector<obj> arr_obj){ //finds type names: setosa,versicolor. Can be altered to find more than 2 types(via remember) but according to Karol we deal with 2 types max.
+vector<string> find_types(vector<obj> arr_obj){ //finds type names: setosa,versicolor etc.. Can be altered to find more than 2 types(via remember) but according to Karol we deal with 2 types max.
 	if(arr_obj.size() == 0){		//returns null vector if array is size 0 or else returns 1 or 2 unique types.
 		return vector<string>();
 	}
@@ -154,7 +158,7 @@ struct node{
 			}
 			++i;
 		}
-		cout<<gain<<endl;
+		cout<<gain<<endl; // TEST
 		return vector<double>{cutoff,att_cutoff};
 	}
 
@@ -220,14 +224,13 @@ int main(int argc,char **argv){
 		while(getline(file,line)){
 			if(!done){
 				comma_count = count_att(line);
-				cout<<"Count of commas: "<<comma_count<<endl;
 				done = true;
 			}
 				extract(arr_obj, line, comma_count);// very important, extracts the data from the file into objects.
 		}
+		cout<<"OBJECT LENGTH: "<<arr_obj.size()<<endl;
+		node* root = new node(arr_obj, find_types(arr_obj));
+		root->node_print();
 	}
-	cout<<"OBJECT LENGTH: "<<arr_obj.size()<<endl;
-	node* root = new node(arr_obj, find_types(arr_obj));
-	root->node_print();
 	return 0;
 }
