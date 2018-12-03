@@ -93,6 +93,11 @@ struct node{
 		right = nullptr;
 		split();
 	}
+
+	~node(){
+		delete left;
+		delete right;
+	}
 	vector<int> each_type_count(vector<obj> arr_obj){
 		int type1 = 0,type2 = 0;
 		int i = 0;
@@ -158,7 +163,6 @@ struct node{
 			}
 			++i;
 		}
-		cout<<gain<<endl; // TEST
 		return vector<double>{cutoff,att_cutoff};
 	}
 
@@ -189,18 +193,21 @@ struct node{
 		this->decision.push_back(s_rtemp);
 		right = new node(greater,this->unique_types, this->decision);
 		this->decision.pop_back();
+		//arr_obj.clear();
 	}
 
 	void node_print(){
 		if(left == nullptr && right == nullptr){
 			int i = 1;
+			string indent = "\t";
 			while(i < decision.size()){
-				cout<<decision[i]<<endl;
+				cout<<indent<<decision[i]<<endl;
 				++i;
+				indent = indent + "\t";
 			}
 			vector<int> type_count = each_type_count(arr_obj);
-			cout<<"Number of total items: "<<arr_obj.size()<<endl;
-			cout<<unique_types[0]<<" count is "<<type_count[0]<<" and "<<unique_types[1]<<" count is "<<type_count[1]<<endl;
+			cout<<"\t"<<indent<<"Number of total items: "<<arr_obj.size()<<endl;
+			cout<<"\t"<<indent<<unique_types[0]<<" count is "<<type_count[0]<<" and "<<unique_types[1]<<" count is "<<type_count[1]<<"\n\n";
 			return;
 		}
 
@@ -228,9 +235,10 @@ int main(int argc,char **argv){
 			}
 				extract(arr_obj, line, comma_count);// very important, extracts the data from the file into objects.
 		}
-		cout<<"OBJECT LENGTH: "<<arr_obj.size()<<endl;
+		cout<<"DATA COUNT: "<<arr_obj.size()<<endl;
 		node* root = new node(arr_obj, find_types(arr_obj));
 		root->node_print();
+		delete root;
 	}
 	return 0;
 }
