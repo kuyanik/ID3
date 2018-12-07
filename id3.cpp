@@ -6,7 +6,7 @@
 
 using namespace std;
 
-int count_att(string str){
+int count_att(string str){// counts the commas,attributes
 	int i = 0;
 	int count = 0;
 	if(str.size() == 0)
@@ -18,7 +18,7 @@ int count_att(string str){
 	return count;
 }
 
-struct obj{
+struct obj{// this struct will store a line of the input file
 
 	vector<double> att;
 	string type;
@@ -38,7 +38,7 @@ struct obj{
 	}
 };
 
-void extract(vector<obj> &arr_obj, string &str, unsigned int &count_comma){
+void extract(vector<obj> &arr_obj, string &str, unsigned int &count_comma){// extracts data from each of the text line
 
 	string temp_s;
 	vector<double> temp_a;
@@ -62,7 +62,7 @@ void extract(vector<obj> &arr_obj, string &str, unsigned int &count_comma){
 
 }
 
-vector<string> find_types(vector<obj> arr_obj){ //finds type names: setosa,versicolor etc.. Can be altered to find more than 2 types(via remember) but according to Karol we deal with 2 types max.
+vector<string> find_types(vector<obj> arr_obj){ //finds type names: setosa,versicolor etc.. Can be altered to find more than 2 types but according to Karol we deal with 2 types max.
 	if(arr_obj.size() == 0){		//returns null vector if array is size 0 or else returns 1 or 2 unique types.
 		return vector<string>();
 	}
@@ -81,17 +81,18 @@ vector<string> find_types(vector<obj> arr_obj){ //finds type names: setosa,versi
 
 struct node{
 	vector <obj> arr_obj;
-	vector<string> decision, unique_types;
+	vector<string> unique_types;
+	string decision;
 	node* left;
 	node* right;
-
-	node (vector<obj> arr_obj,vector<string> unique_types, vector<string> decision = {"At root node"}){
+	int level;
+	node (vector<obj> arr_obj, vector<string> unique_types){
 		this->unique_types = unique_types;
 		this->arr_obj = arr_obj;
-		this->decision = decision;
+		this->decision = "Root";
+		this->level = 0;
 		left = nullptr;
 		right = nullptr;
-		split();
 	}
 
 	~node(){
@@ -112,8 +113,8 @@ struct node{
 		return vector<int>{type1,type2};
 	}
 
-	double entropy(vector<obj> arr_obj){
-		vector<int> type_count = each_type_count(arr_obj);
+	double entropy(vector<obj> arr_obj){ // finds entropy
+		vector<int> type_count = each_type_count(arr_obj);// finds each versicolor or setosa count
 		if(type_count[0] == 0 || type_count[1] == 0){ //homogenous or empty
 			return 0;
 		}
@@ -124,7 +125,7 @@ struct node{
 		return entropy;
 	}
 
-	vector<double> find_split_point(vector<obj> arr_obj){//find split point
+	vector<double> find_split_point(vector<obj> arr_obj){//finds split point via comparing gain
 		double gain = 0, cutoff = 0, att_cutoff = 0;
 		vector<obj> smaller,greater;
 		int i = 0;
@@ -166,13 +167,13 @@ struct node{
 		return vector<double>{cutoff,att_cutoff};
 	}
 
-	void split(){
+	void split(){ // Splits the node into two new parts
 		vector<int> type_count = each_type_count(this->arr_obj);
 		if(type_count[0] == 0 || type_count[1] == 0){ //homogenous or empty
 			return;
 		}
 
-		vector<double> split_point = find_split_point(this->arr_obj); // index 0 cutoff , index 1 attribute
+		vector<double> split_point = find_split_point(this->arr_obj); // index [0]: cutoff , index [1]: attribute
 		vector<obj> smaller,greater;
 		int i = 0;
 		while(i < arr_obj.size()){
@@ -185,31 +186,36 @@ struct node{
 			}
 			++i;
 		}
-		string s_ltemp = ("Attribute_" + to_string( int(split_point[1]+1)) + " <= " + to_string(split_point[0]));
-		string s_rtemp = ("Attribute_" + to_string( int(split_point[1]+1)) + " > " + to_string(split_point[0]));
-		this->decision.push_back(s_ltemp);
-		left = new node(smaller,this->unique_types, this->decision);
-		this->decision.pop_back();
-		this->decision.push_back(s_rtemp);
-		right = new node(greater,this->unique_types, this->decision);
-		this->decision.pop_back();
-		//arr_obj.clear();
+		string s_temp = ("Attribute-" + to_string( int(split_point[1]+1)) + " <= " + to_string(split_point[0]));
+		this->decision = s_temp;
+		left = new node(smaller, this->unique_types);
+		left->level = this->level + 1; // increasing level
+		right = new node(greater, this->unique_types);
+		right->level = this->level + 1; // increasing level
+		arr_obj.clear();
+
+		left->split();
+		right->split();
 	}
 
-	void node_print(){
+	void node_print(){// Prints recursively tree structred
+		string indent = "";
+		int i = 0;
+		while(i < this->level){
+			indent = indent + "  ";
+			++i;
+		}
 		if(left == nullptr && right == nullptr){
-			int i = 1;
-			string indent = "\t";
-			while(i < decision.size()){
-				cout<<indent<<decision[i]<<endl;
-				++i;
-				indent = indent + "\t";
-			}
 			vector<int> type_count = each_type_count(arr_obj);
-			cout<<"\t"<<indent<<"Number of total items: "<<arr_obj.size()<<endl;
-			cout<<"\t"<<indent<<unique_types[0]<<" count is "<<type_count[0]<<" and "<<unique_types[1]<<" count is "<<type_count[1]<<"\n\n";
+			if(type_count[0] != 0){
+				cout<<indent<<"Leaf: "<<unique_types[0]<<"("<<type_count[0]<<")"<<endl;
+			}
+			if(type_count[1] != 0){
+				cout<<indent<<"Leaf: "<<unique_types[1]<<"("<<type_count[1]<<")"<<endl;
+			}
 			return;
 		}
+		cout<<indent<<decision<<endl;
 
 		left->node_print();
 		right->node_print();
@@ -235,8 +241,10 @@ int main(int argc,char **argv){
 			}
 				extract(arr_obj, line, comma_count);// very important, extracts the data from the file into objects.
 		}
-		cout<<"DATA COUNT: "<<arr_obj.size()<<endl;
+//		cout<<"DATA COUNT: "<<arr_obj.size()<<endl; // if you want to see the data count uncomment this
 		node* root = new node(arr_obj, find_types(arr_obj));
+		root->split();
+		cout<<"ROOT: "<<endl;
 		root->node_print();
 		delete root;
 	}
